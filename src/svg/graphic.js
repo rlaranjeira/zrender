@@ -142,18 +142,20 @@ function pathDataToString(path) {
 
                 var dThetaPositive = Math.abs(dTheta);
                 var isCircle = isAroundZero(dThetaPositive - PI2)
-                    && !isAroundZero(dThetaPositive);
+                    || (clockwise ? dTheta >= PI2 : -dTheta >= PI2);
+
+                // Mapping to 0~2PI
+                var unifiedTheta = dTheta > 0 ? dTheta % PI2 : (dTheta % PI2 + PI2);
 
                 var large = false;
-                if (dThetaPositive >= PI2) {
+                if (isCircle) {
                     large = true;
                 }
                 else if (isAroundZero(dThetaPositive)) {
                     large = false;
                 }
                 else {
-                    large = (dTheta > -PI && dTheta < 0 || dTheta > PI)
-                        === !!clockwise;
+                    large = (unifiedTheta >= PI) === !!clockwise;
                 }
 
                 var x0 = round4(cx + rx * mathCos(theta));
@@ -309,6 +311,7 @@ svgImage.brush = function (el) {
 var svgText = {};
 export {svgText as text};
 var tmpRect = new BoundingRect();
+var tmpTextPositionResult = {};
 
 var svgTextDrawRectText = function (el, rect, textRect) {
     var style = el.style;
@@ -334,7 +337,6 @@ var svgTextDrawRectText = function (el, rect, textRect) {
     var x;
     var y;
     var textPosition = style.textPosition;
-    var distance = style.textDistance;
     var align = style.textAlign || 'left';
 
     if (typeof style.fontSize === 'number') {
@@ -364,9 +366,9 @@ var svgTextDrawRectText = function (el, rect, textRect) {
         y = rect.y + textHelper.parsePercent(textPosition[1], rect.height);
     }
     else {
-        var newPos = textContain.adjustTextPositionOnRect(
-            textPosition, rect, distance
-        );
+        var newPos = el.calculateTextPosition
+            ? el.calculateTextPosition(tmpTextPositionResult, style, rect)
+            : textContain.calculateTextPosition(tmpTextPositionResult, style, rect);
         x = newPos.x;
         y = newPos.y;
         verticalAlign = newPos.textVerticalAlign;
