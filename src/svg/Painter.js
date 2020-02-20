@@ -232,29 +232,38 @@ SVGPainter.prototype = {
                     prevSvgElement = textSvgElement || svgElement
                         || prevSvgElement;
 
+                    // zrender.Text only create textSvgElement.
                     this.gradientManager
-                        .addWithoutUpdate(svgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
                     this.shadowManager
-                        .addWithoutUpdate(prevSvgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
                     this.clipPathManager.markUsed(displayable);
                 }
             }
             else if (!item.removed) {
                 for (var k = 0; k < item.count; k++) {
                     var displayable = newVisibleList[item.indices[k]];
-                    prevSvgElement = getTextSvgElement(displayable)
-                        || getSvgElement(displayable) || prevSvgElement;
-                    svgElement = getSvgElement(displayable) || getTextSvgElement(displayable);
+                    var svgElement = getSvgElement(displayable);
+                    var textSvgElement = getTextSvgElement(displayable);
+
+                    var svgElement = getSvgElement(displayable);
+                    var textSvgElement = getTextSvgElement(displayable);
 
                     this.gradientManager.markUsed(displayable);
                     this.gradientManager
-                        .addWithoutUpdate(svgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
 
                     this.shadowManager.markUsed(displayable);
                     this.shadowManager
-                        .addWithoutUpdate(svgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
 
                     this.clipPathManager.markUsed(displayable);
+
+                    if (textSvgElement) { // Insert text.
+                        insertAfter(svgRoot, textSvgElement, svgElement);
+                    }
+                    prevSvgElement = svgElement
+                        || textSvgElement || prevSvgElement;
                 }
             }
         }
